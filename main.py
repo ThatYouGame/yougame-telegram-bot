@@ -1,23 +1,34 @@
 import os
-import telebot
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
-# Récupérer le token Telegram depuis les variables Railway
+# On récupère le token Telegram depuis les variables d'environnement Railway
 TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
 
-bot = telebot.TeleBot(TELEGRAM_TOKEN)
+def start(update, context):
+    """Répond à la commande /start."""
+    update.message.reply_text("Bienvenue dans YouGame ! Ton bot fonctionne correctement.")
 
-@bot.message_handler(commands=["start"])
-def handle_start(message):
-    bot.reply_to(
-        message,
-        "Bienvenue dans YouGame ! Ton bot fonctionne correctement."
-    )
+def echo(update, context):
+    """Répond à tous les autres messages texte."""
+    user_text = update.message.text
+    update.message.reply_text(f"Tu as écrit : {user_text}")
 
-@bot.message_handler(func=lambda msg: True)
-def handle_all(message):
-    # Réponse simple pour vérifier que tout marche
-    bot.reply_to(message, f"Tu as dit : {message.text}")
+def main():
+    # Création du bot avec le token
+    updater = Updater(TELEGRAM_TOKEN, use_context=True)
 
-if _name_ == "_main_":
-    print("Bot YouGame démarré…")
-    bot.infinity_polling(skip_pending=True)
+    dp = updater.dispatcher
+
+    # Handler pour /start
+    dp.add_handler(CommandHandler("start", start))
+
+    # Handler pour tous les messages texte non-commandes
+    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, echo))
+
+    # Lancement du bot (long polling)
+    updater.start_polling()
+    updater.idle()
+
+# Point d'entrée du script
+if __name__ == "__main__":
+    main()
